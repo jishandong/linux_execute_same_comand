@@ -1,0 +1,62 @@
+#########################
+# !/usr/local/bin/expect
+# by: zhu_shixiang
+# at: 2012.11.10
+# in: suzhou
+#########################
+proc help {} {
+  puts "if you want execute command. example:"
+  puts "expect batch.exp -i 192.168.1.100 -u root -p 123456 -c \"cd /home/; pwd; ifconfig\"\n"
+  puts "if you want scp files. example:"
+  puts "expect batch.exp -i 192.168.1.100 -u root -p 123456 -cp /home/test.txt -s /tmp/\n\n"
+}
+set iType [lindex $argv 0]
+if { $iType == "-i" } {
+    set ipv4 [lindex $argv 1]
+    set uType [lindex $argv 2]
+    if { $uType == "-u" } {
+        set login [lindex $argv 3]
+        set pType [lindex $argv 4]
+        if { $pType == "-p" } {
+            set passwd [lindex $argv 5]
+            set bzType [lindex $argv 6]
+            if { $bzType == "-c" } {
+                set command [lindex $argv 7]
+                #set timeout 5
+                spawn ssh $login@$ipv4
+                expect {
+                   "yes/no" {send "yes\r"; exp_continue}
+                   "password:" {send "$passwd\r"}
+                }
+                sleep 1
+                send "$command\r"
+                send "exit\r"
+                expect eof
+                exit
+         } elseif { $bzType == "-cp"} {
+                set file [lindex $argv 7]
+                set sType [lindex $argv 8]
+                if { $sType == "-s" } {
+                    set path [lindex $argv 9]
+                    spawn scp $file $login@$ipv4:$path
+                    expect {
+                       "yes/no" {send "yes\r"; exp_continue}
+                       "password:" {send "$passwd\r"}
+                    }
+                    sleep 1
+                    interact
+               } else {
+                    help
+               }
+         } else {
+              help
+         }
+       } else {
+            help
+       }
+   } else {
+        help
+   }
+} else {
+     help
+}
